@@ -1,0 +1,53 @@
+create sequence public.click_new_id_seq;
+
+create table public.click
+(
+id bigserial primary key,
+ip inet,
+created_at timestamp(0) default now() not null,
+referer text,
+user_agent text
+);
+
+
+create table public.actions
+(
+id bigserial primary key,
+event_date timestamp(0) not null,
+click_id bigint not null,
+created_at timestamp(0),
+updated_at timestamp(0)
+);
+
+create index actions_click_id_index
+on public.actions (click_id);
+
+
+
+INSERT INTO public.click (ip, referer, user_agent) VALUES
+  ('192.168.0.1', 'http://example.com/page1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'),
+  ('192.168.0.2', 'http://example.com/page2', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'),
+  ('192.168.0.3', 'http://example.com/page3', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'),
+  ('192.168.0.4', 'http://example.com/page4', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+
+INSERT INTO public.actions (event_date, click_id) VALUES
+  ('2022-01-01 12:00:00', 1),
+  ('2022-01-02 14:30:00', 1),
+  ('2022-01-03 10:45:00', 2);
+
+
+
+
+1. Выбрать клики у которых точно есть actions
+
+(Semijoin)
+
+SELECT click.* FROM public.click
+WHERE EXISTS (SELECT click_id FROM public.actions WHERE actions.click_id = click.id);
+
+
+2. Выбрать клики у которых точно нету actions
+
+SELECT click.* FROM public.click
+WHERE NOT EXISTS (SELECT click_id FROM public.actions WHERE actions.click_id = click.id);
